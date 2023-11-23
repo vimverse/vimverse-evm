@@ -23,6 +23,7 @@ contract BondDepository44 is OwnableUpgradeable, PausableUpgradeable, Reentrancy
     event BondRedeemed( address indexed recipient, uint payout, uint remaining );
     event BondPriceChanged( uint indexed priceInUSD, uint indexed internalPrice, uint indexed debtRatio );
     event ControlVariableAdjustment( uint initialBCV, uint newBCV, uint adjustment, bool addition );
+    event SetAdjustment(bool _addition, uint _increment, uint _target, uint _buffer);
 
     /* ======== STATE VARIABLES ======== */
 
@@ -154,7 +155,7 @@ contract BondDepository44 is OwnableUpgradeable, PausableUpgradeable, Reentrancy
      */
     function setBondTerms ( PARAMETER _parameter, uint _input ) external onlyOwner() {
         if ( _parameter == PARAMETER.VESTING ) { // 0
-            require( _input >= 3600 * 8, "Vesting must be longer than 36 hours" );
+            require( _input >= 3600 * 36, "Vesting must be longer than 36 hours" );
             terms.vestingTerm = _input;
         } else if ( _parameter == PARAMETER.PAYOUT ) { // 1
             require( _input <= 1000, "Payout cannot be above 1 percent" );
@@ -182,8 +183,6 @@ contract BondDepository44 is OwnableUpgradeable, PausableUpgradeable, Reentrancy
         uint _target,
         uint _buffer 
     ) external onlyOwner() {
-        //require( _increment <= terms.controlVariable.mul( 100 ).div( 1000 ), "Increment too large" );
-
         adjustment = Adjust({
             add: _addition,
             rate: _increment,
@@ -191,6 +190,7 @@ contract BondDepository44 is OwnableUpgradeable, PausableUpgradeable, Reentrancy
             buffer: _buffer,
             lastTimestamp: block.timestamp
         });
+        emit SetAdjustment(_addition, _increment, _target, _buffer);
     }
 
     /**

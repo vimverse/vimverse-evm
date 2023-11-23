@@ -38,6 +38,9 @@ contract Staking is OwnableUpgradeable, ReentrancyGuardUpgradeable {
     address public warmupContract;
     uint public warmupPeriod;
 
+    event SetWarmup( uint _warmupPeriod );
+    event SetContract( CONTRACTS _contract, address _address );
+
     /* ======== INITIALIZATION ======== */
     
     function initialize(
@@ -224,6 +227,7 @@ contract Staking is OwnableUpgradeable, ReentrancyGuardUpgradeable {
             require( locker == address(0), "Locker cannot be set more than once" );
             locker = _address;
         }
+        emit SetContract(_contract, _address);
     }
     
     /**
@@ -232,6 +236,7 @@ contract Staking is OwnableUpgradeable, ReentrancyGuardUpgradeable {
      */
     function setWarmup( uint _warmupPeriod ) external onlyOwner() {
         warmupPeriod = _warmupPeriod;
+        emit SetWarmup(_warmupPeriod);
     }
 
     function setFirstEpochTimestamp(uint256 _firstEpochTimestamp) external onlyOwner() {

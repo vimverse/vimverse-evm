@@ -267,11 +267,6 @@ contract Treasury is OwnableUpgradeable {
         return totalReserves.sub( IERC20( Vim ).totalSupply().sub( totalDebt ) );
     }
 
-    function setTotalReserves(uint256 _totalReserves) external onlyOwner {
-        require(totalReserves < _totalReserves);
-        totalReserves = _totalReserves;
-    }
-
     /**
         @notice takes inventory of all tracked assets
         @notice always consolidate to recognized reserves before audit
@@ -279,11 +274,17 @@ contract Treasury is OwnableUpgradeable {
     function auditReserves() external onlyOwner() {
         uint reserves;
         for( uint i = 0; i < reserveTokens.length; i++ ) {
+            if (isReserveToken[reserveTokens[i]] == false) {
+                continue;
+            }
             reserves = reserves.add ( 
                 valueOf( reserveTokens[ i ], IERC20( reserveTokens[ i ] ).balanceOf( address(this) ) )
             );
         }
         for( uint i = 0; i < liquidityTokens.length; i++ ) {
+            if (isLiquidityToken[liquidityTokens[i]] == false) {
+                continue;
+            }
             reserves = reserves.add (
                 valueOf( liquidityTokens[ i ], IERC20( liquidityTokens[ i ] ).balanceOf( address(this) ) )
             );
@@ -375,6 +376,7 @@ contract Treasury is OwnableUpgradeable {
         } else if ( _managing == MANAGING.RESERVETOKEN ) { // 2
             if ( requirements( reserveTokenQueue, isReserveToken, _address ) ) {
                 reserveTokenQueue[ _address ] = 0;
+                require(listContains( liquidityTokens, _address ) == false, "existing token");
                 if( !listContains( reserveTokens, _address ) ) {
                     reserveTokens.push( _address );
                 }
@@ -407,6 +409,7 @@ contract Treasury is OwnableUpgradeable {
         } else if ( _managing == MANAGING.LIQUIDITYTOKEN ) { // 5
             if ( requirements( LiquidityTokenQueue, isLiquidityToken, _address ) ) {
                 LiquidityTokenQueue[ _address ] = 0;
+                require(listContains( reserveTokens, _address ) == false, "existing token");
                 if( !listContains( liquidityTokens, _address ) ) {
                     liquidityTokens.push( _address );
                 }
@@ -495,6 +498,4 @@ contract Treasury is OwnableUpgradeable {
             IERC20(token).safeApprove(spender, uint256(~0));
         }
     }
-
-    receive() external payable {}
 }

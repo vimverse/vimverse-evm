@@ -19,6 +19,10 @@ contract Distributor is OwnableUpgradeable {
     uint public nextEpochTimestamp;
     
     mapping( uint => Adjust ) public adjustments;
+
+    event SetAdjustment( uint _index, bool _add, uint _rate, uint _target );
+    event AddRecipient( address _recipient, uint _rewardRate );
+    event RemoveRecipient( uint _index, address _recipient );
     
     
     /* ====== STRUCTS ====== */
@@ -114,7 +118,7 @@ contract Distributor is OwnableUpgradeable {
         uint reward;
         for ( uint i = 0; i < info.length; i++ ) {
             if ( info[ i ].recipient == _recipient ) {
-                reward = nextRewardAt( info[ i ].rate );
+                reward += nextRewardAt( info[ i ].rate );
             }
         }
         return reward;
@@ -133,6 +137,7 @@ contract Distributor is OwnableUpgradeable {
             recipient: _recipient,
             rate: _rewardRate
         }));
+        emit AddRecipient(_recipient, _rewardRate);
     }
 
     /**
@@ -144,6 +149,7 @@ contract Distributor is OwnableUpgradeable {
         require( _recipient == info[ _index ].recipient );
         info[ _index ].recipient = address(0);
         info[ _index ].rate = 0;
+        emit RemoveRecipient(_index, _recipient);
     }
 
     /**
@@ -159,5 +165,6 @@ contract Distributor is OwnableUpgradeable {
             rate: _rate,
             target: _target
         });
+        emit SetAdjustment(_index, _add, _rate, _target);
     }
 }
