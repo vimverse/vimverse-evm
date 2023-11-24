@@ -232,8 +232,10 @@ contract Treasury is OwnableUpgradeable {
     function manage( address _token, uint _amount ) external {
         if( isLiquidityToken[ _token ] ) {
             require( isLiquidityManager[ msg.sender ], "Not approved" );
-        } else {
+        } else if ( isReserveToken[ _token ] ) {
             require( isReserveManager[ msg.sender ], "Not approved" );
+        } else {
+            revert("Not approved token");
         }
 
         uint value = valueOf(_token, _amount);
@@ -386,7 +388,6 @@ contract Treasury is OwnableUpgradeable {
 
         } else if ( _managing == MANAGING.RESERVEMANAGER ) { // 3
             if ( requirements( ReserveManagerQueue, isReserveManager, _address ) ) {
-                reserveManagers.push( _address );
                 ReserveManagerQueue[ _address ] = 0;
                 if( !listContains( reserveManagers, _address ) ) {
                     reserveManagers.push( _address );
@@ -397,7 +398,6 @@ contract Treasury is OwnableUpgradeable {
 
         } else if ( _managing == MANAGING.LIQUIDITYDEPOSITOR ) { // 4
             if ( requirements( LiquidityDepositorQueue, isLiquidityDepositor, _address ) ) {
-                liquidityDepositors.push( _address );
                 LiquidityDepositorQueue[ _address ] = 0;
                 if( !listContains( liquidityDepositors, _address ) ) {
                     liquidityDepositors.push( _address );

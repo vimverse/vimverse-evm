@@ -160,6 +160,7 @@ contract Distributor is OwnableUpgradeable {
         @param _target uint
      */
     function setAdjustment( uint _index, bool _add, uint _rate, uint _target ) external onlyOwner() {
+        require(_index < info.length, "Invalid index");
         adjustments[ _index ] = Adjust({
             add: _add,
             rate: _rate,
